@@ -1,0 +1,19 @@
+name: seguros-api
+version: 0.1.0
+
+dependencies:
+  kemal:
+    github: kemalcr/kemal
+  pg:
+    github: will/crystal-pg
+
+authors:
+  - Davi Souza <dsl@ic.ufal.br>
+
+targets:
+  seguros-api:
+    main: src/seguros-api.cr
+
+crystal: '>= 1.13.3'
+
+license: MIT
