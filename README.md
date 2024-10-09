@@ -1,4 +1,4 @@
-`# seguros-api
+# sApi de seguros
 
 seguros-api is a RESTful API for managing insurance records. This API allows users to create, read, update, and delete insurance entries efficiently.
 
