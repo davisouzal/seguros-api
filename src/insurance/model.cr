@@ -3,6 +3,10 @@ require "pg"
 require "json"
 
 class Insurance
+  alias ListOfInsurances = Array(Hash(String, Float64 | Int32 | String | Time))
+  alias Insurance = Hash(String, Float64 | Int32 | String | Time)
+  alias DBConnection = PG::Connection
+  alias DBResult = PG::ResultSet
   # Atributos do modelo
   property id : Int32?
   property user_id : Int32
@@ -21,38 +25,44 @@ class Insurance
       @user_id, @type, @max_coverage, @start_date, @end_date)
   end
 
-  # Método para obter um seguro pelo ID
-  def self.get(db, id : Int32) : Insurance?
-    result = db.query("SELECT id, user_id, type, max_coverage, start_date, end_date FROM seguros WHERE id = $1", id)
-
-    if result.any?
-      row = result.first
-      return Insurance.new(row["user_id"].to_i32, row["type"].to_s, row["max_coverage"].to_f64,
-        row["start_date"].to_s, row["end_date"].to_s)
-    end
-
-    return nil
+  # Método para obter todos os seguros
+  def self.get_all(db) : ListOfInsurances
+    self.transform_insurances(db.query(%{
+    SELECT
+      *
+    FROM insurance
+    ORDER BY id
+  }))
   end
 
-  # Método para obter todos os seguros
-  def self.get_all(db) : Array(Insurance)
-    insurances = [] of Insurance
-    result = db.query("SELECT id, user_id, type, max_coverage, start_date, end_date FROM seguros")
+  def self.get_by_id(db, id : Int32)
+    result = db.query(%{
+      SELECT
+        id, user_id , type, max_coverage, start_date, end_date
+      FROM insurance
+      WHERE id = $1
+    }, id)
 
-    result.each do
+    self.transform_insurances(result)
+  end
+
+  def self.transform_insurances(insurances : DBResult) : ListOfInsurances
+    list_of_insurances = ListOfInsurances.new
+
+    insurances.each do
       insurance = {
-        "id"           => result.read(Int32),
-        "user_id"      => result.read(Int32),
-        "type"         => result.read(String),
-        "max_coverage" => result.read(Float64),
-        "start_date"   => result.read(String),
-        "end_date"     => result.read(String),
+        "id"           => insurances.read(Int32),
+        "user_id"      => insurances.read(Int32),
+        "type"         => insurances.read(String),
+        "max_coverage" => insurances.read(Float64),
+        "start_date"   => insurances.read(Time),
+        "end_date"     => insurances.read(Time),
       }
 
-      #insuranceObject = Insurance.new(insurance["id"], insurance["user_id"], insurance["type"], insurance["max_coverage"], insurance["start_date"], insurance["end_date"])
+      !p insurance
 
-      #insurances << insuranceObject
+      list_of_insurances << insurance
     end
-    return insurances
-  end
+    list_of_insurances
+  end  
 end

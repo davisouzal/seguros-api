@@ -9,45 +9,18 @@ db = PG.connect(DB_URL)
 module Seguros::Api
   VERSION = "0.1.0"
 
-  # post "/users" do |env|
-  #   begin
-  #     json_data = JSON.parse(env.request.body.not_nil!)
-
-  #     name = json_data["name"].as_s
-  #     email = json_data["email"].as_s
-
-  #     db.exec("INSERT INTO users (name, email) VALUES ($1, $2)", name, email)
-
-  #     env.response.print({message: "User created successfully"}.to_json)
-  #   rescue ex : Exception
-  #     env.response.print({error: ex.message}.to_json)
-  #   end
-  # end
-
-  # get "/users" do |env|
-  #   begin
-  #     users = [] of Hash(String, String)
-
-  #     result = db.query("SELECT name, email FROM users")
-  #     result.each do
-  #       user = {
-  #         "name"  => result.read(String),
-  #         "email" => result.read(String),
-  #       }
-  #       users << user
-  #     end
-
-  #     env.response.print(users.to_json)
-  #   rescue ex : Exception
-  #     env.response.print({error: ex.message}.to_json)
-  #   end
-  # end
-
   get "/insurance" do |env|
     begin
-      insurances = Insurance.get_all(db) # Usando o método do modelo
+      env.response.print(Insurance.get_all(db).to_json)
+    rescue ex : Exception
+      env.response.print({error: ex.message}.to_json)
+    end
+  end
 
-      #env.response.print(insurances.to_json)
+  get "/insurance/:id" do |env|
+    begin
+      id = env.params.url["id"].to_i32
+      env.response.print(Insurance.get_by_id(db, id).to_json)
     rescue ex : Exception
       env.response.print({error: ex.message}.to_json)
     end
