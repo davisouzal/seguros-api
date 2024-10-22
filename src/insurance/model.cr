@@ -21,38 +21,35 @@ class Insurance
       @user_id, @type, @max_coverage, @start_date, @end_date)
   end
 
-  # Método para obter um seguro pelo ID
-  def self.get(db, id : Int32) : Insurance?
-    result = db.query("SELECT id, user_id, type, max_coverage, start_date, end_date FROM seguros WHERE id = $1", id)
+  # Método para obter todos os seguros
+  def self.get_all(db)
+    result = db.exec("SELECT * FROM insurance")
 
-    if result.any?
-      row = result.first
-      return Insurance.new(row["user_id"].to_i32, row["type"].to_s, row["max_coverage"].to_f64,
-        row["start_date"].to_s, row["end_date"].to_s)
+    insurances = [] of Insurance
+
+    result.each do |row|
+      insurance = Insurance.new(
+        row["user_id"].to_i32,
+        row["type"],
+        row["max_coverage"].to_f64,
+        row["start_date"],
+        row["end_date"]
+      )
+      insurance.id = row["id"].to_i32
+      insurances << insurance
     end
 
-    return nil
+    insurances
   end
 
-  # Método para obter todos os seguros
-  def self.get_all(db) : Array(Insurance)
-    insurances = [] of Insurance
-    result = db.query("SELECT id, user_id, type, max_coverage, start_date, end_date FROM seguros")
-
-    result.each do
-      insurance = {
-        "id"           => result.read(Int32),
-        "user_id"      => result.read(Int32),
-        "type"         => result.read(String),
-        "max_coverage" => result.read(Float64),
-        "start_date"   => result.read(String),
-        "end_date"     => result.read(String),
-      }
-
-      #insuranceObject = Insurance.new(insurance["id"], insurance["user_id"], insurance["type"], insurance["max_coverage"], insurance["start_date"], insurance["end_date"])
-
-      #insurances << insuranceObject
-    end
-    return insurances
+  def to_json(*)
+    {
+      "id" => @id,
+      "user_id" => @user_id,
+      "type" => @type,
+      "max_coverage" => @max_coverage,
+      "start_date" => @start_date,
+      "end_date" => @end_date
+    }.to_json
   end
 end
