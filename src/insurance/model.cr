@@ -46,6 +46,21 @@ class Insurance
     self.transform_insurances(result)
   end
 
+  def update(db, id : Int32)
+    db.exec(%{
+      UPDATE insurance
+      SET user_id = $1, type = $2, max_coverage = $3, start_date = $4, end_date = $5
+      WHERE id = $6
+    }, @user_id, @type, @max_coverage, @start_date, @end_date, id)
+  end
+
+  def self.delete(db, id : Int32)
+    db.exec(%{
+      DELETE FROM insurance
+      WHERE id = $1
+    }, id)
+  end
+
   def self.transform_insurances(insurances : DBResult) : ListOfInsurances
     list_of_insurances = ListOfInsurances.new
 
@@ -58,9 +73,6 @@ class Insurance
         "start_date"   => insurances.read(Time),
         "end_date"     => insurances.read(Time),
       }
-
-      !p insurance
-
       list_of_insurances << insurance
     end
     list_of_insurances
