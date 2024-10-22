@@ -11,9 +11,16 @@ module Seguros::Api
 
   get "/insurance" do |env|
     begin
-      insurances = Insurance.get_all(db) # Usando o método do modelo
-      env.response.content_type = "application/json"
-      env.response.print(insurances.to_json)
+      env.response.print(Insurance.get_all(db).to_json)
+    rescue ex : Exception
+      env.response.print({error: ex.message}.to_json)
+    end
+  end
+
+  get "/insurance/:id" do |env|
+    begin
+      id = env.params.url["id"].to_i32
+      env.response.print(Insurance.get_by_id(db, id).to_json)
     rescue ex : Exception
       env.response.print({error: ex.message}.to_json)
     end

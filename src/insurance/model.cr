@@ -3,6 +3,10 @@ require "pg"
 require "json"
 
 class Insurance
+  alias ListOfInsurances = Array(Hash(String, Float64 | Int32 | String | Time))
+  alias Insurance = Hash(String, Float64 | Int32 | String | Time)
+  alias DBConnection = PG::Connection
+  alias DBResult = PG::ResultSet
   # Atributos do modelo
   property id : Int32?
   property user_id : Int32
@@ -22,34 +26,43 @@ class Insurance
   end
 
   # Método para obter todos os seguros
-  def self.get_all(db)
-    result = db.exec("SELECT * FROM insurance")
+  def self.get_all(db) : ListOfInsurances
+    self.transform_insurances(db.query(%{
+    SELECT
+      *
+    FROM insurance
+    ORDER BY id
+  }))
+  end
 
-    insurances = [] of Insurance
+  def self.get_by_id(db, id : Int32)
+    result = db.query(%{
+      SELECT
+        id, user_id , type, max_coverage, start_date, end_date
+      FROM insurance
+      WHERE id = $1
+    }, id)
 
-    result.each do |row|
-      insurance = Insurance.new(
-        row["user_id"].to_i32,
-        row["type"],
-        row["max_coverage"].to_f64,
-        row["start_date"],
-        row["end_date"]
-      )
-      insurance.id = row["id"].to_i32
-      insurances << insurance
+    self.transform_insurances(result)
+  end
+
+  def self.transform_insurances(insurances : DBResult) : ListOfInsurances
+    list_of_insurances = ListOfInsurances.new
+
+    insurances.each do
+      insurance = {
+        "id"           => insurances.read(Int32),
+        "user_id"      => insurances.read(Int32),
+        "type"         => insurances.read(String),
+        "max_coverage" => insurances.read(Float64),
+        "start_date"   => insurances.read(Time),
+        "end_date"     => insurances.read(Time),
+      }
+
+      !p insurance
+
+      list_of_insurances << insurance
     end
-
-    insurances
-  end
-
-  def to_json(*)
-    {
-      "id" => @id,
-      "user_id" => @user_id,
-      "type" => @type,
-      "max_coverage" => @max_coverage,
-      "start_date" => @start_date,
-      "end_date" => @end_date
-    }.to_json
-  end
+    list_of_insurances
+  end  
 end
