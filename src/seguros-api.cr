@@ -3,6 +3,7 @@ require "json"
 require "pg"
 require "./insurance/model.cr"
 require "./claim/model.cr"
+require "./logs/model.cr"
 
 DB_URL = "postgres://postgres:postgres@localhost/seguros_db"
 db = PG.connect(DB_URL)
@@ -145,6 +146,74 @@ module Seguros::Api
       Claim.delete(db, id)
 
       env.response.print({message: "Claim deleted successfully"}.to_json)
+    rescue ex : Exception
+      env.response.print({error: ex.message}.to_json)
+    end
+  end
+
+  get "/logs" do |env|
+    begin
+      env.response.print(Logs.get_all(db).to_json)
+    rescue ex : Exception
+      env.response.print({error: ex.message}.to_json)
+    end
+  end
+  
+  # Rota para obter um log pelo ID
+  get "/logs/:id" do |env|
+    begin
+      id = env.params.url["id"].to_i32
+      env.response.print(Logs.get_by_id(db, id).to_json)
+    rescue ex : Exception
+      env.response.print({error: ex.message}.to_json)
+    end
+  end
+  
+  # Rota para criar um novo log
+  post "/logs" do |env|
+    begin
+      json_data = JSON.parse(env.request.body.not_nil!)
+  
+      log = Logs.new(
+        json_data["user_id"].as_s.to_i32,
+        json_data["protocol_number"].as_s.to_i32,
+        json_data["date"].as_s,
+        json_data["type"].as_s
+      )
+  
+      log.save(db)
+      env.response.print({message: "Log created successfully"}.to_json)
+    rescue ex : Exception
+      env.response.print({error: ex.message}.to_json)
+    end
+  end
+  
+  # Rota para atualizar um log pelo ID
+  put "/logs/:id" do |env|
+    begin
+      id = env.params.url["id"].to_i32
+      json_data = JSON.parse(env.request.body.not_nil!)
+  
+      log = Logs.new(
+        json_data["user_id"].as_s.to_i32,
+        json_data["protocol_number"].as_s.to_i32,
+        json_data["date"].as_s,
+        json_data["type"].as_s
+      )
+  
+      log.update(db, id)
+      env.response.print({message: "Log updated successfully"}.to_json)
+    rescue ex : Exception
+      env.response.print({error: ex.message}.to_json)
+    end
+  end
+  
+  # Rota para deletar um log pelo ID
+  delete "/logs/:id" do |env|
+    begin
+      id = env.params.url["id"].to_i32
+      Logs.delete(db, id)
+      env.response.print({message: "Log deleted successfully"}.to_json)
     rescue ex : Exception
       env.response.print({error: ex.message}.to_json)
     end
