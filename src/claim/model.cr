@@ -48,6 +48,17 @@ class Claim
     self.transform_claims(result)
   end
 
+  def self.get_by_insurance_id(db, insurance_id : Int32)
+    result = db.query(%{
+      SELECT
+        id, insurance_id, claim_number, claim_date, end_date, claim_amount, status
+      FROM claim
+      WHERE insurance_id = $1
+    }, insurance_id)
+
+    self.transform_claims(result)
+  end
+
   def update(db, id : Int32)
     db.exec(%{
       UPDATE claim

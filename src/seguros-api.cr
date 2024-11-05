@@ -102,6 +102,15 @@ module Seguros::Api
     end
   end
 
+  get "/claim/insurance/:insurance_id" do |env|
+    begin
+      insurance_id = env.params.url["insurance_id"].to_i32
+      env.response.print(Claim.get_by_insurance_id(db, insurance_id).to_json)
+    rescue ex : Exception
+      env.response.print({error: ex.message}.to_json)
+    end
+  end
+
   # Rota para criar um novo sinistro
   post "/claim" do |env|
     begin
