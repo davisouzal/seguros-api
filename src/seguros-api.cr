@@ -29,6 +29,15 @@ module Seguros::Api
     end
   end
 
+  get "/insurance/user/:user_id" do |env|
+    begin
+      id = env.params.url["user_id"].to_i32
+      env.response.print(Insurance.get_by_user_id(db, id).to_json)
+    rescue ex : Exception
+      env.response.print({error: ex.message}.to_json)
+    end
+  end
+
   post "/insurance" do |env|
     begin
       json_data = JSON.parse(env.request.body.not_nil!)

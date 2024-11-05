@@ -46,6 +46,17 @@ class Insurance
     self.transform_insurances(result)
   end
 
+  def self.get_by_user_id(db, id : Int32)
+    result = db.query(%{
+      SELECT
+        id, user_id , type, max_coverage, start_date, end_date
+      FROM insurance
+      WHERE user_id = $1
+    }, id)
+
+    self.transform_insurances(result)
+  end
+
   def update(db, id : Int32)
     db.exec(%{
       UPDATE insurance
